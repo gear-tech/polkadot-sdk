@@ -75,7 +75,6 @@
 
 #![warn(missing_docs)]
 #![cfg_attr(not(feature = "std"), no_std)]
-#![cfg_attr(enable_alloc_error_handler, feature(alloc_error_handler))]
 
 use sp_std::vec::Vec;
 
@@ -1755,21 +1754,6 @@ pub fn panic(info: &core::panic::PanicInfo) -> ! {
 	#[cfg(not(feature = "improved_panic_error_reporting"))]
 	{
 		logging::log(LogLevel::Error, "runtime", message.as_bytes());
-		core::arch::wasm32::unreachable();
-	}
-}
-
-/// A default OOM handler for WASM environment.
-#[cfg(all(not(feature = "disable_oom"), enable_alloc_error_handler))]
-#[alloc_error_handler]
-pub fn oom(_: core::alloc::Layout) -> ! {
-	#[cfg(feature = "improved_panic_error_reporting")]
-	{
-		panic_handler::abort_on_panic("Runtime memory exhausted.");
-	}
-	#[cfg(not(feature = "improved_panic_error_reporting"))]
-	{
-		logging::log(LogLevel::Error, "runtime", b"Runtime memory exhausted. Aborting");
 		core::arch::wasm32::unreachable();
 	}
 }
