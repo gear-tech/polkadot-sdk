@@ -20346,6 +20346,7 @@ dependencies = [
  "ark-ed-on-bls12-381-bandersnatch-ext",
  "ark-scale",
  "sp-runtime-interface",
+ "sp-std",
 ]
 
 [[package]]

@@ -28,6 +28,7 @@ ark-ed-on-bls12-377-ext = { optional = true, workspace = true }
 ark-ed-on-bls12-377 = { optional = true, workspace = true }
 ark-scale = { features = ["hazmat"], optional = true, workspace = true }
 sp-runtime-interface = { optional = true, workspace = true }
+sp-std = { optional = true, workspace = true }
 
 [features]
 default = ["std"]
@@ -46,6 +47,7 @@ std = [
 	"ark-ed-on-bls12-381-bandersnatch?/std",
 	"ark-scale?/std",
 	"sp-runtime-interface?/std",
+	"sp-std?/std",
 ]
 common = ["ark-ec", "ark-scale", "sp-runtime-interface"]
 bls12-377 = ["ark-bls12-377", "ark-bls12-377-ext", "common"]
