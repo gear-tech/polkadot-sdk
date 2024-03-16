@@ -75,7 +75,6 @@
 
 #![warn(missing_docs)]
 #![cfg_attr(not(feature = "std"), no_std)]
-#![cfg_attr(enable_alloc_error_handler, feature(alloc_error_handler))]
 
 extern crate alloc;
 
