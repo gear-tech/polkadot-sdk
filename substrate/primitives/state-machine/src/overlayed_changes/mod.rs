@@ -237,7 +237,6 @@ impl<H: Hasher> Default for StorageChanges<H> {
 /// Storage transactions are calculated as part of the `storage_root`.
 /// These transactions can be reused for importing the block into the
 /// storage. So, we cache them to not require a recomputation of those transactions.
-#[derive(Clone)]
 struct StorageTransactionCache<H: Hasher> {
 	/// Contains the changes for the main and the child storages as one transaction.
 	transaction: BackendTransaction<H>,
