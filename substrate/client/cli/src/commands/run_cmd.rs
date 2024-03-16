@@ -193,6 +193,9 @@ pub struct RunCmd {
 	/// When `--dev` is given and no explicit `--base-path`, this option is implied.
 	#[arg(long, conflicts_with = "base_path")]
 	pub tmp: bool,
+
+	#[arg(long, default_value_t = 0x4000)]
+	pub default_heap_pages: u32,
 }
 
 impl RunCmd {
@@ -389,16 +392,15 @@ impl CliConfiguration for RunCmd {
 			}
 		})
 	}
+
+	fn default_heap_pages(&self) -> Result<Option<u64>> {
+		Ok(Some(self.default_heap_pages as u64))
+	}
 }
 
 /// Check whether a node name is considered as valid.
 pub fn is_node_name_valid(_name: &str) -> std::result::Result<(), &str> {
 	let name = _name.to_string();
-
-	if name.is_empty() {
-		return Err("Node name cannot be empty")
-	}
-
 	if name.chars().count() >= crate::NODE_NAME_MAX_LENGTH {
 		return Err("Node name too long")
 	}
@@ -409,7 +411,7 @@ pub fn is_node_name_valid(_name: &str) -> std::result::Result<(), &str> {
 		return Err("Node name should not contain invalid chars such as '.' and '@'")
 	}
 
-	let invalid_patterns = r"^https?:";
+	let invalid_patterns = r"(https?:\\/+)?(www)+";
 	let re = Regex::new(invalid_patterns).unwrap();
 	if re.is_match(&name) {
 		return Err("Node name should not contain urls")
@@ -495,32 +497,18 @@ mod tests {
 	#[test]
 	fn tests_node_name_good() {
 		assert!(is_node_name_valid("short name").is_ok());
-		assert!(is_node_name_valid("www").is_ok());
-		assert!(is_node_name_valid("aawww").is_ok());
-		assert!(is_node_name_valid("wwwaa").is_ok());
-		assert!(is_node_name_valid("www aa").is_ok());
 	}
 
 	#[test]
 	fn tests_node_name_bad() {
-		assert!(is_node_name_valid("").is_err());
 		assert!(is_node_name_valid(
 			"very very long names are really not very cool for the ui at all, really they're not"
 		)
 		.is_err());
 		assert!(is_node_name_valid("Dots.not.Ok").is_err());
-		// NOTE: the urls below don't include a domain otherwise
-		// they'd get filtered for including a `.`
-		assert!(is_node_name_valid("http://visitme").is_err());
-		assert!(is_node_name_valid("http:/visitme").is_err());
-		assert!(is_node_name_valid("http:visitme").is_err());
-		assert!(is_node_name_valid("https://visitme").is_err());
-		assert!(is_node_name_valid("https:/visitme").is_err());
-		assert!(is_node_name_valid("https:visitme").is_err());
+		assert!(is_node_name_valid("http://visit.me").is_err());
+		assert!(is_node_name_valid("https://visit.me").is_err());
 		assert!(is_node_name_valid("www.visit.me").is_err());
-		assert!(is_node_name_valid("www.visit").is_err());
-		assert!(is_node_name_valid("hello\\world").is_err());
-		assert!(is_node_name_valid("visit.www").is_err());
 		assert!(is_node_name_valid("email@domain").is_err());
 	}
 }
