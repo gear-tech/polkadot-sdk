@@ -20,19 +20,22 @@
 #![cfg_attr(not(feature = "std"), no_std)]
 
 use sp_std::{iter::Iterator, marker::PhantomData, result, vec, vec::Vec};
-pub use sp_wasm_interface_common::{self as common, Value, ValueType, Pointer, PointerType, IntoValue, TryFromValue, ReturnValue, WordSize, MemoryId, HostPointer, Signature};
+pub use sp_wasm_interface_common::{
+	self as common, HostPointer, IntoValue, MemoryId, Pointer, PointerType, ReturnValue, Signature,
+	TryFromValue, Value, ValueType, WordSize,
+};
 
 if_wasmtime_is_enabled! {
-    mod host_state;
-    pub use host_state::HostState;
+	mod host_state;
+	pub use host_state::HostState;
 
-    mod store_data;
-    pub use store_data::StoreData;
+	mod store_data;
+	pub use store_data::StoreData;
 
-    mod memory_wrapper;
-    pub use memory_wrapper::MemoryWrapper;
+	mod memory_wrapper;
+	pub use memory_wrapper::MemoryWrapper;
 
-    pub mod util;
+	pub mod util;
 }
 
 #[cfg(not(all(feature = "std", feature = "wasmtime")))]
@@ -79,7 +82,7 @@ mod private {
 	impl Sealed for i32 {}
 	impl Sealed for i64 {}
 
-    pub(super) struct Token;
+	pub(super) struct Token;
 }
 
 /// A trait that requires `RefUnwindSafe` when `feature = std`.
@@ -123,9 +126,9 @@ pub use wasmtime::Caller;
 pub struct FunctionContextToken(private::Token);
 
 impl FunctionContextToken {
-    fn new() -> Self {
-        Self(private::Token)
-    }
+	fn new() -> Self {
+		Self(private::Token)
+	}
 }
 
 /// Context used by `Function` to interact with the allocator and the memory of the wasm instance.
@@ -167,13 +170,20 @@ pub trait FunctionContext {
 	/// is harmless and will overwrite the previously set error message.
 	fn register_panic_error_message(&mut self, message: &str);
 
-    fn with_caller_mut_impl(&mut self, _: FunctionContextToken, context: *mut (), callback: fn(*mut (), &mut Caller<StoreData>));
-
+	fn with_caller_mut_impl(
+		&mut self,
+		_: FunctionContextToken,
+		context: *mut (),
+		callback: fn(*mut (), &mut Caller<StoreData>),
+	);
 }
 
-pub fn with_caller_mut<T: FnMut(&mut Caller<StoreData>)>(context: &mut dyn FunctionContext, mut callback: T) {
-    let callback: *mut T = &mut callback;
-    context.with_caller_mut_impl(FunctionContextToken::new(), callback.cast(), |callback, caller| {
+pub fn with_caller_mut<T: FnMut(&mut Caller<StoreData>)>(
+	context: &mut dyn FunctionContext,
+	mut callback: T,
+) {
+	let callback: *mut T = &mut callback;
+	context.with_caller_mut_impl(FunctionContextToken::new(), callback.cast(), |callback, caller| {
         let callback: *mut T = callback.cast();
         let callback: &mut T = unsafe { callback.as_mut().expect("we own the value, obtain mutable reference to it and cast to pointer (correct (not null) and aligned properly); qed") };
 
