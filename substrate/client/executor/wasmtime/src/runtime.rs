@@ -20,20 +20,22 @@
 
 use crate::{
 	host::HostState,
-	instance_wrapper::{EntryPoint, InstanceWrapper, MemoryWrapper},
-	util::{self, replace_strategy_if_broken},
+	instance_wrapper::{EntryPoint, InstanceWrapper},
+	util::replace_strategy_if_broken,
 };
 
 use parking_lot::Mutex;
-use sc_allocator::{AllocationStats, FreeingBumpHeapAllocator};
 use sc_executor_common::{
-	error::{Error, Result, WasmError},
+	error::{Result, WasmError},
 	runtime_blob::RuntimeBlob,
-	util::checked_range,
 	wasm_runtime::{HeapAllocStrategy, InvokeMethod, WasmInstance, WasmModule},
 };
+use sp_allocator::{AllocationStats, FreeingBumpHeapAllocator};
 use sp_runtime_interface::unpack_ptr_and_len;
-use sp_wasm_interface::{HostFunctions, Pointer, Value, WordSize};
+pub use sp_wasm_interface::StoreData;
+use sp_wasm_interface::{
+	util as memory_util, HostFunctions, MemoryWrapper, Pointer, Value, WordSize,
+};
 use std::{
 	path::{Path, PathBuf},
 	sync::{
@@ -44,28 +46,6 @@ use std::{
 use wasmtime::{AsContext, Engine, Memory, Table};
 
 const MAX_INSTANCE_COUNT: u32 = 64;
-
-#[derive(Default)]
-pub(crate) struct StoreData {
-	/// This will only be set when we call into the runtime.
-	pub(crate) host_state: Option<HostState>,
-	/// This will be always set once the store is initialized.
-	pub(crate) memory: Option<Memory>,
-	/// This will be set only if the runtime actually contains a table.
-	pub(crate) table: Option<Table>,
-}
-
-impl StoreData {
-	/// Returns a mutable reference to the host state.
-	pub fn host_state_mut(&mut self) -> Option<&mut HostState> {
-		self.host_state.as_mut()
-	}
-
-	/// Returns the host memory.
-	pub fn memory(&self) -> Memory {
-		self.memory.expect("memory is always set; qed")
-	}
-}
 
 pub(crate) type Store = wasmtime::Store<StoreData>;
 
@@ -194,8 +174,9 @@ impl WasmInstance for WasmtimeInstance {
 
 	fn get_global_const(&mut self, name: &str) -> Result<Option<Value>> {
 		match &mut self.strategy {
-			Strategy::RecreateInstance(ref mut instance_creator) =>
-				instance_creator.instantiate()?.get_global_val(name),
+			Strategy::RecreateInstance(ref mut instance_creator) => {
+				instance_creator.instantiate()?.get_global_val(name)
+			},
 		}
 	}
 }
@@ -298,8 +279,9 @@ fn common_config(semantics: &Semantics) -> std::result::Result<wasmtime::Config,
 
 	config.memory_init_cow(use_cow);
 	config.memory_guaranteed_dense_image_size(match semantics.heap_alloc_strategy {
-		HeapAllocStrategy::Dynamic { maximum_pages } =>
-			maximum_pages.map(|p| p as u64 * WASM_PAGE_SIZE).unwrap_or(u64::MAX),
+		HeapAllocStrategy::Dynamic { maximum_pages } => {
+			maximum_pages.map(|p| p as u64 * WASM_PAGE_SIZE).unwrap_or(u64::MAX)
+		},
 		HeapAllocStrategy::Static { .. } => u64::MAX,
 	});
 
@@ -307,8 +289,9 @@ fn common_config(semantics: &Semantics) -> std::result::Result<wasmtime::Config,
 		const MAX_WASM_PAGES: u64 = 0x10000;
 
 		let memory_pages = match semantics.heap_alloc_strategy {
-			HeapAllocStrategy::Dynamic { maximum_pages } =>
-				maximum_pages.map(|p| p as u64).unwrap_or(MAX_WASM_PAGES),
+			HeapAllocStrategy::Dynamic { maximum_pages } => {
+				maximum_pages.map(|p| p as u64).unwrap_or(MAX_WASM_PAGES)
+			},
 			HeapAllocStrategy::Static { .. } => MAX_WASM_PAGES,
 		};
 
@@ -604,11 +587,12 @@ where
 				.map_err(|e| WasmError::Other(format!("cannot create module: {:#}", e)))?;
 
 			match config.semantics.instantiation_strategy {
-				InstantiationStrategy::Pooling |
-				InstantiationStrategy::PoolingCopyOnWrite |
-				InstantiationStrategy::RecreateInstance |
-				InstantiationStrategy::RecreateInstanceCopyOnWrite =>
-					(module, InternalInstantiationStrategy::Builtin),
+				InstantiationStrategy::Pooling
+				| InstantiationStrategy::PoolingCopyOnWrite
+				| InstantiationStrategy::RecreateInstance
+				| InstantiationStrategy::RecreateInstanceCopyOnWrite => {
+					(module, InternalInstantiationStrategy::Builtin)
+				},
 			}
 		},
 		CodeSupplyMode::Precompiled(compiled_artifact_path) => {
@@ -723,8 +707,8 @@ fn inject_input_data(
 	let mut ctx = instance.store_mut();
 	let memory = ctx.data().memory();
 	let data_len = data.len() as WordSize;
-	let data_ptr = allocator.allocate(&mut MemoryWrapper(&memory, &mut ctx), data_len)?;
-	util::write_memory_from(instance.store_mut(), data_ptr, data)?;
+	let data_ptr = allocator.allocate(&mut MemoryWrapper::from((&memory, &mut ctx)), data_len)?;
+	memory_util::write_memory_from(instance.store_mut(), data_ptr, data)?;
 	Ok((data_ptr, data_len))
 }
 
@@ -741,11 +725,11 @@ fn extract_output_data(
 	//
 	// Get the size of the WASM memory in bytes.
 	let memory_size = ctx.as_context().data().memory().data_size(ctx);
-	if checked_range(output_ptr as usize, output_len as usize, memory_size).is_none() {
-		Err(Error::OutputExceedsBounds)?
+	if memory_util::checked_range(output_ptr as usize, output_len as usize, memory_size).is_none() {
+		Err(WasmError::Other("output exceeds bounds of wasm memory".into()))?
 	}
 	let mut output = vec![0; output_len as usize];
 
-	util::read_memory_into(ctx, Pointer::new(output_ptr), &mut output)?;
+	memory_util::read_memory_into(ctx, Pointer::new(output_ptr), &mut output)?;
 	Ok(output)
 }
