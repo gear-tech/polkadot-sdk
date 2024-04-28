@@ -3802,15 +3802,19 @@ impl<T: Config> Pallet<T> {
 			Error::<T>::MaxPoolMembers
 		);
 
-		ensure!(
-			TotalValueLocked::<T>::get() == expected_tvl,
-			"TVL deviates from the actual sum of funds of all Pools."
-		);
+		if StorageVersion::get::<crate::Pallet<T>>() >= 7 {
 
-		ensure!(
-			TotalValueLocked::<T>::get() <= total_balance_members,
-			"TVL must be equal to or less than the total balance of all PoolMembers."
-		);
+			ensure!(
+				TotalValueLocked::<T>::get() == expected_tvl,
+				"TVL deviates from the actual sum of funds of all Pools."
+			);
+
+			ensure!(
+				TotalValueLocked::<T>::get() <= total_balance_members,
+				"TVL must be equal to or less than the total balance of all PoolMembers."
+			);
+		
+		}
 
 		if level <= 1 {
 			return Ok(())
@@ -3838,9 +3842,13 @@ impl<T: Config> Pallet<T> {
 			);
 		}
 
-		// Warn if any pool has incorrect ED frozen. We don't want to fail hard as this could be a
-		// result of an intentional ED change.
-		let _ = Self::check_ed_imbalance()?;
+		if StorageVersion::get::<crate::Pallet<T>>() >= 6 {
+
+			// Warn if any pool has incorrect ED frozen. We don't want to fail hard as this could be a
+			// result of an intentional ED change.
+			let _ = Self::check_ed_imbalance()?;
+		
+		}
 
 		Ok(())
 	}
