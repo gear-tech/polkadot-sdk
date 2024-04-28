@@ -3408,9 +3408,13 @@ impl<T: Config> Pallet<T> {
 			);
 		}
 
-		// Warn if any pool has incorrect ED frozen. We don't want to fail hard as this could be a
-		// result of an intentional ED change.
-		let _ = Self::check_ed_imbalance()?;
+		if StorageVersion::get::<crate::Pallet<T>>() >= 6 {
+
+			// Warn if any pool has incorrect ED frozen. We don't want to fail hard as this could be a
+			// result of an intentional ED change.
+			let _ = Self::check_ed_imbalance()?;
+		
+		}
 
 		Ok(())
 	}
