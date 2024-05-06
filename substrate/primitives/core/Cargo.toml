@@ -54,11 +54,12 @@ libsecp256k1 = { features = ["static-context"], workspace = true }
 schnorrkel = { features = ["preaudit_deprecated"], workspace = true }
 merlin = { workspace = true }
 sp-crypto-hashing.workspace = true
-sp-runtime-interface.workspace = true
+sp-runtime-interface = {workspace = true, default-features = false }
 # k256 crate, better portability, intended to be used in substrate-runtimes (no-std)
 k256 = { features = ["alloc", "ecdsa"], workspace = true }
 # secp256k1 crate, better performance, intended to be used on host side (std)
 secp256k1 = { features = ["alloc", "recovery"], optional = true, workspace = true }
+# sp-allocator = { workspace = true, default-features = false }
 
 # bls crypto
 w3f-bls = { optional = true, workspace = true }
