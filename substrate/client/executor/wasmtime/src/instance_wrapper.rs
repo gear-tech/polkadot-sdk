@@ -65,10 +65,12 @@ impl EntryPoint {
 		let data_len = u32::from(data_len);
 
 		match self.call_type {
-			EntryPointType::Direct { ref entrypoint } =>
-				entrypoint.call(&mut *store, (data_ptr, data_len)),
-			EntryPointType::Wrapped { func, ref dispatcher } =>
-				dispatcher.call(&mut *store, (func, data_ptr, data_len)),
+			EntryPointType::Direct { ref entrypoint } => {
+				entrypoint.call(&mut *store, (data_ptr, data_len))
+			},
+			EntryPointType::Wrapped { func, ref dispatcher } => {
+				dispatcher.call(&mut *store, (func, data_ptr, data_len))
+			},
 		}
 		.map_err(|trap| {
 			let host_state = store
@@ -111,41 +113,6 @@ impl EntryPoint {
 			.typed::<(u32, u32, u32), u64>(ctx)
 			.map_err(|_| "Invalid signature for wrapped entry point")?;
 		Ok(Self { call_type: EntryPointType::Wrapped { func, dispatcher } })
-	}
-}
-
-/// Wrapper around [`Memory`] that implements [`sc_allocator::Memory`].
-pub(crate) struct MemoryWrapper<'a, C>(pub &'a wasmtime::Memory, pub &'a mut C);
-
-impl<C: AsContextMut> sc_allocator::Memory for MemoryWrapper<'_, C> {
-	fn with_access_mut<R>(&mut self, run: impl FnOnce(&mut [u8]) -> R) -> R {
-		run(self.0.data_mut(&mut self.1))
-	}
-
-	fn with_access<R>(&self, run: impl FnOnce(&[u8]) -> R) -> R {
-		run(self.0.data(&self.1))
-	}
-
-	fn grow(&mut self, additional: u32) -> std::result::Result<(), ()> {
-		self.0
-			.grow(&mut self.1, additional as u64)
-			.map_err(|e| {
-				log::error!(
-					target: "wasm-executor",
-					"Failed to grow memory by {} pages: {}",
-					additional,
-					e,
-				)
-			})
-			.map(drop)
-	}
-
-	fn pages(&self) -> u32 {
-		self.0.size(&self.1) as u32
-	}
-
-	fn max_pages(&self) -> Option<u32> {
-		self.0.ty(&self.1).maximum().map(|p| p as _)
 	}
 }
 

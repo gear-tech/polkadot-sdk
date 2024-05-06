@@ -28,7 +28,7 @@ wasmtime = { version = "8.0.1", default-features = false, features = [
 	"pooling-allocator",
 ] }
 anyhow = "1.0.68"
-sc-allocator = { path = "../../allocator" }
+sp-allocator = { path = "../../../primitives/allocator" }
 sc-executor-common = { path = "../common" }
 sp-runtime-interface = { path = "../../../primitives/runtime-interface" }
 sp-wasm-interface = { path = "../../../primitives/wasm-interface", features = ["wasmtime"] }
