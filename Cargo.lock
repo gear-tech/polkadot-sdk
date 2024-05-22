@@ -760,6 +760,7 @@ dependencies = [
  "cumulus-primitives-utility",
  "frame-benchmarking",
  "frame-executive",
+ "frame-metadata-hash-extension",
  "frame-support",
  "frame-system",
  "frame-system-benchmarking",
@@ -1032,6 +1033,7 @@ dependencies = [
  "cumulus-pallet-dmp-queue",
  "cumulus-pallet-parachain-system",
  "emulated-integration-tests-common",
+ "frame-metadata-hash-extension",
  "frame-support",
  "frame-system",
  "pallet-asset-conversion",
@@ -1073,6 +1075,7 @@ dependencies = [
  "cumulus-primitives-utility",
  "frame-benchmarking",
  "frame-executive",
+ "frame-metadata-hash-extension",
  "frame-support",
  "frame-system",
  "frame-system-benchmarking",
@@ -5750,6 +5753,41 @@ dependencies = [
 ]
 
 [[package]]
+name = "frame-metadata-hash-extension"
+version = "0.1.0"
+dependencies = [
+ "array-bytes",
+ "docify",
+ "frame-metadata",
+ "frame-support",
+ "frame-system",
+ "log",
+ "merkleized-metadata",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-api",
+ "sp-runtime",
+ "sp-tracing 16.0.0",
+ "sp-transaction-pool",
+ "substrate-test-runtime-client",
+ "substrate-wasm-builder",
+]
+
+[[package]]
+name = "frame-omni-bencher"
+version = "0.1.0"
+dependencies = [
+ "clap 4.5.3",
+ "cumulus-primitives-proof-size-hostfunction",
+ "env_logger 0.11.3",
+ "frame-benchmarking-cli",
+ "log",
+ "sc-cli",
+ "sp-runtime",
+ "sp-statement-store",
+]
+
+[[package]]
 name = "frame-remote-externalities"
 version = "0.10.0-dev"
 dependencies = [
@@ -7216,6 +7254,7 @@ dependencies = [
  "frame-benchmarking-pallet-pov",
  "frame-election-provider-support",
  "frame-executive",
+ "frame-metadata-hash-extension",
  "frame-support",
  "frame-system",
  "frame-system-benchmarking",
@@ -8289,6 +8328,20 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8452105ba047068f40ff7093dd1d9da90898e63dd61736462e9cdda6a90ad3c3"
 
 [[package]]
+name = "merkleized-metadata"
+version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f313fcff1d2a4bcaa2deeaa00bf7530d77d5f7bd0467a117dde2e29a75a7a17a"
+dependencies = [
+ "array-bytes",
+ "blake3",
+ "frame-metadata",
+ "parity-scale-codec",
+ "scale-decode",
+ "scale-info",
+]
+
+[[package]]
 name = "merlin"
 version = "2.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -8926,6 +8979,7 @@ dependencies = [
 name = "node-testing"
 version = "3.0.0-dev"
 dependencies = [
+ "frame-metadata-hash-extension",
  "frame-system",
  "fs_extra",
  "futures",
@@ -11464,6 +11518,7 @@ dependencies = [
  "cumulus-primitives-utility",
  "frame-benchmarking",
  "frame-executive",
+ "frame-metadata-hash-extension",
  "frame-support",
  "frame-system",
  "frame-system-benchmarking",
@@ -13268,6 +13323,109 @@ dependencies = [
 ]
 
 [[package]]
+name = "polkadot-sdk-docs"
+version = "0.0.1"
+dependencies = [
+ "cumulus-client-service",
+ "cumulus-pallet-aura-ext",
+ "cumulus-pallet-parachain-system",
+ "cumulus-primitives-proof-size-hostfunction",
+ "cumulus-primitives-storage-weight-reclaim",
+ "docify",
+ "frame-executive",
+ "frame-metadata-hash-extension",
+ "frame-support",
+ "frame-system",
+ "kitchensink-runtime",
+ "pallet-assets",
+ "pallet-aura",
+ "pallet-authorship",
+ "pallet-babe",
+ "pallet-balances",
+ "pallet-broker",
+ "pallet-collective",
+ "pallet-default-config-example",
+ "pallet-democracy",
+ "pallet-example-offchain-worker",
+ "pallet-example-single-block-migrations",
+ "pallet-examples",
+ "pallet-multisig",
+ "pallet-nfts",
+ "pallet-preimage",
+ "pallet-proxy",
+ "pallet-referenda",
+ "pallet-scheduler",
+ "pallet-timestamp",
+ "pallet-transaction-payment",
+ "pallet-uniques",
+ "pallet-utility",
+ "parity-scale-codec",
+ "polkadot-sdk-frame",
+ "sc-cli",
+ "sc-client-db",
+ "sc-consensus-aura",
+ "sc-consensus-babe",
+ "sc-consensus-beefy",
+ "sc-consensus-grandpa",
+ "sc-consensus-manual-seal",
+ "sc-consensus-pow",
+ "sc-executor",
+ "sc-network",
+ "sc-rpc",
+ "sc-rpc-api",
+ "sc-service",
+ "scale-info",
+ "simple-mermaid 0.1.1",
+ "sp-api",
+ "sp-arithmetic",
+ "sp-core",
+ "sp-io",
+ "sp-keyring",
+ "sp-offchain",
+ "sp-runtime",
+ "sp-version",
+ "staging-chain-spec-builder",
+ "staging-node-cli",
+ "staging-parachain-info",
+ "staging-xcm",
+ "subkey",
+ "substrate-wasm-builder",
+]
+
+[[package]]
+name = "polkadot-sdk-frame"
+version = "0.1.0"
+dependencies = [
+ "docify",
+ "frame-benchmarking",
+ "frame-executive",
+ "frame-support",
+ "frame-system",
+ "frame-system-benchmarking",
+ "frame-system-rpc-runtime-api",
+ "frame-try-runtime",
+ "log",
+ "pallet-examples",
+ "parity-scale-codec",
+ "scale-info",
+ "sp-api",
+ "sp-arithmetic",
+ "sp-block-builder",
+ "sp-consensus-aura",
+ "sp-consensus-grandpa",
+ "sp-core",
+ "sp-inherents",
+ "sp-io",
+ "sp-offchain",
+ "sp-runtime",
+ "sp-session",
+ "sp-std 14.0.0",
+ "sp-storage 19.0.0",
+ "sp-transaction-pool",
+ "sp-version",
+]
+
+[[package]]
 name = "polkadot-service"
 version = "1.0.0"
 dependencies = [
@@ -13276,6 +13434,7 @@ dependencies = [
  "env_logger 0.9.3",
  "frame-benchmarking",
  "frame-benchmarking-cli",
+ "frame-metadata-hash-extension",
  "frame-support",
  "frame-system",
  "frame-system-rpc-runtime-api",
@@ -14675,6 +14834,7 @@ dependencies = [
  "binary-merkle-tree",
  "frame-benchmarking",
  "frame-executive",
+ "frame-metadata-hash-extension",
  "frame-remote-externalities",
  "frame-support",
  "frame-system",
@@ -16531,6 +16691,29 @@ dependencies = [
 ]
 
 [[package]]
+name = "scale-bits"
+version = "0.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e57b1e7f6b65ed1f04e79a85a57d755ad56d76fdf1e9bddcc9ae14f71fcdcf54"
+dependencies = [
+ "parity-scale-codec",
+ "scale-type-resolver",
+]
+
+[[package]]
+name = "scale-decode"
+version = "0.13.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b12ebca36cec2a3f983c46295b282b35e5f8496346fb859a8776dad5389e5389"
+dependencies = [
+ "derive_more",
+ "parity-scale-codec",
+ "scale-bits",
+ "scale-type-resolver",
+ "smallvec",
+]
+
+[[package]]
 name = "scale-info"
 version = "2.11.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -16555,6 +16738,12 @@ dependencies = [
  "quote",
  "syn 1.0.109",
 ]
+
+[[package]]
+name = "scale-type-resolver"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f0cded6518aa0bd6c1be2b88ac81bf7044992f0f154bfbabd5ad34f43512abcb"
 
 [[package]]
 name = "schannel"
@@ -18435,6 +18624,8 @@ dependencies = [
  "clap_complete",
  "criterion 0.4.0",
  "frame-benchmarking-cli",
+ "frame-metadata-hash-extension",
+ "frame-support",
  "frame-system",
  "frame-system-rpc-runtime-api",
  "futures",
@@ -18951,6 +19142,7 @@ version = "2.0.0"
 dependencies = [
  "array-bytes 6.1.0",
  "frame-executive",
+ "frame-metadata-hash-extension",
  "frame-support",
  "frame-system",
  "frame-system-rpc-runtime-api",
@@ -19041,13 +19233,23 @@ dependencies = [
 name = "substrate-wasm-builder"
 version = "5.0.0-dev"
 dependencies = [
- "ansi_term",
+ "array-bytes",
  "build-helper",
  "cargo_metadata",
+ "console",
  "filetime",
- "parity-wasm 0.45.0 (registry+https://github.com/rust-lang/crates.io-index)",
+ "frame-metadata",
+ "merkleized-metadata",
+ "parity-scale-codec",
+ "parity-wasm",
+ "polkavm-linker",
+ "sc-executor",
+ "sp-core",
+ "sp-io",
  "sp-maybe-compressed-blob",
- "strum",
+ "sp-tracing 16.0.0",
+ "sp-version",
+ "strum 0.26.2",
  "tempfile",
  "toml 0.7.6",
  "walkdir",
@@ -21160,6 +21362,7 @@ dependencies = [
  "frame-benchmarking",
  "frame-election-provider-support",
  "frame-executive",
+ "frame-metadata-hash-extension",
  "frame-remote-externalities",
  "frame-support",
  "frame-system",
