@@ -755,8 +755,10 @@ fn build_bloaty_blob(
 	println!("{} {:?}", colorize_info_message("Executing build command:"), build_cmd);
 	println!("{} {}", colorize_info_message("Using rustc version:"), cargo_cmd.rustc_version());
 
+	let status = build_cmd.status();
+
 	// Use `process::exit(1)` to have a clean error output.
-	if build_cmd.status().map(|s| s.success()).is_err() {
+	if status.is_err() || !status.expect("checked on left operand; qed").success() {
 		process::exit(1);
 	}
 }
