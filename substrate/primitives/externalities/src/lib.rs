@@ -309,6 +309,11 @@ pub trait Externalities: ExtensionStore {
 	///
 	/// Get all the keys that have been read or written to during the benchmark.
 	fn get_read_and_written_keys(&self) -> Vec<(Vec<u8>, u32, u32, bool)>;
+
+	/// Access to `OverlayChanges<H>` for `gear-tasks`.
+	fn gear_overlayed_changes(&self) -> Option<Box<dyn Any + Send>> {
+		None
+	}
 }
 
 /// Extension for the [`Externalities`] trait.
