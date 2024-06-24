@@ -48,8 +48,6 @@ pub trait CallExecutor<B: BlockT>: RuntimeVersionOf {
 	/// The backend used by the node.
 	type Backend: crate::backend::Backend<B>;
 
-	fn gear_use_native(&mut self) {}
-
 	/// Returns the [`ExecutionExtensions`].
 	fn execution_extensions(&self) -> &ExecutionExtensions<B>;
 

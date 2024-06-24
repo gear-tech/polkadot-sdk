@@ -209,7 +209,6 @@ mod execution {
 		/// Used for logging.
 		parent_hash: Option<H::Out>,
 		context: CallContext,
-		gear_use_native: bool,
 	}
 
 	impl<'a, B, H, Exec> Drop for StateMachine<'a, B, H, Exec>
@@ -251,7 +250,6 @@ mod execution {
 				stats: StateMachineStats::default(),
 				parent_hash: None,
 				context,
-				gear_use_native: false,
 			}
 		}
 
@@ -291,14 +289,7 @@ mod execution {
 
 			let result = self
 				.exec
-				.call(
-					&mut ext,
-					self.runtime_code,
-					self.method,
-					self.call_data,
-					self.gear_use_native,
-					self.context,
-				)
+				.call(&mut ext, self.runtime_code, self.method, self.call_data, false, self.context)
 				.0;
 
 			self.overlay
@@ -313,10 +304,6 @@ mod execution {
 			);
 
 			result.map_err(|e| Box::new(e) as Box<_>)
-		}
-
-		pub fn gear_use_native(&mut self) {
-			self.gear_use_native = true;
 		}
 	}
 

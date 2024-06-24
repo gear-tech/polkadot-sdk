@@ -451,10 +451,6 @@ where
 		})
 	}
 
-	pub fn gear_use_native(&mut self) {
-		self.executor.gear_use_native();
-	}
-
 	/// returns a reference to the block import notification sinks
 	/// useful for test environments.
 	pub fn import_notification_sinks(&self) -> &NotificationSinks<BlockImportNotification<Block>> {
