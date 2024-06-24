@@ -17591,10 +17591,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "sp-tasks"
-version = "0.1.0"
-
-[[package]]
 name = "sp-test-primitives"
 version = "2.0.0"
 dependencies = [
