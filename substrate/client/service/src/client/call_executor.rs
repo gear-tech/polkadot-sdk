@@ -39,7 +39,6 @@ pub struct LocalCallExecutor<Block: BlockT, B, E> {
 	wasm_override: Arc<Option<WasmOverride>>,
 	wasm_substitutes: WasmSubstitutes<Block, E, B>,
 	execution_extensions: Arc<ExecutionExtensions<Block>>,
-	gear_use_native: bool,
 }
 
 impl<Block: BlockT, B, E> LocalCallExecutor<Block, B, E>
@@ -72,7 +71,6 @@ where
 			wasm_override: Arc::new(wasm_override),
 			wasm_substitutes,
 			execution_extensions: Arc::new(execution_extensions),
-			gear_use_native: false,
 		})
 	}
 
@@ -143,7 +141,6 @@ where
 			wasm_override: self.wasm_override.clone(),
 			wasm_substitutes: self.wasm_substitutes.clone(),
 			execution_extensions: self.execution_extensions.clone(),
-			gear_use_native: self.gear_use_native,
 		}
 	}
 }
@@ -157,10 +154,6 @@ where
 	type Error = E::Error;
 
 	type Backend = B;
-
-	fn gear_use_native(&mut self) {
-		self.gear_use_native = true;
-	}
 
 	fn execution_extensions(&self) -> &ExecutionExtensions<Block> {
 		&self.execution_extensions
@@ -244,11 +237,6 @@ where
 					call_context,
 				)
 				.set_parent_hash(at_hash);
-
-				if self.gear_use_native {
-					state_machine.gear_use_native();
-				}
-
 				state_machine.execute()
 			},
 			None => {
@@ -263,11 +251,6 @@ where
 					call_context,
 				)
 				.set_parent_hash(at_hash);
-
-				if self.gear_use_native {
-					state_machine.gear_use_native();
-				}
-
 				state_machine.execute()
 			},
 		}
