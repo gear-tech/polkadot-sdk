@@ -159,7 +159,7 @@ where
 
 impl<'a, H, B> Externalities for Ext<'a, H, B>
 where
-	H: Hasher,
+	H: Hasher + 'static,
 	H::Out: Ord + 'static + codec::Codec,
 	B: Backend<H>,
 {
@@ -650,6 +650,10 @@ where
 
 	fn get_read_and_written_keys(&self) -> Vec<(Vec<u8>, u32, u32, bool)> {
 		self.backend.get_read_and_written_keys()
+	}
+
+	fn gear_overlayed_changes(&self) -> Option<Box<dyn Any + Send>> {
+		Some(Box::new(self.overlay.clone()))
 	}
 }
 

@@ -565,6 +565,7 @@ pub struct NativeElseWasmExecutor<D: NativeExecutionDispatch> {
 	/// Fallback wasm executor.
 	wasm:
 		WasmExecutor<ExtendedHostFunctions<sp_io::SubstrateHostFunctions, D::ExtendHostFunctions>>,
+	gear_force_native: bool,
 }
 
 impl<D: NativeExecutionDispatch> NativeElseWasmExecutor<D> {
@@ -601,7 +602,11 @@ impl<D: NativeExecutionDispatch> NativeElseWasmExecutor<D> {
 			.with_runtime_cache_size(runtime_cache_size)
 			.build();
 
-		NativeElseWasmExecutor { native_version: D::native_version(), wasm }
+		NativeElseWasmExecutor {
+			native_version: D::native_version(),
+			wasm,
+			gear_force_native: false,
+		}
 	}
 
 	/// Create a new instance using the given [`WasmExecutor`].
@@ -610,13 +615,17 @@ impl<D: NativeExecutionDispatch> NativeElseWasmExecutor<D> {
 			ExtendedHostFunctions<sp_io::SubstrateHostFunctions, D::ExtendHostFunctions>,
 		>,
 	) -> Self {
-		Self { native_version: D::native_version(), wasm: executor }
+		Self { native_version: D::native_version(), wasm: executor, gear_force_native: false }
 	}
 
 	/// Ignore missing function imports if set true.
 	#[deprecated(note = "use `Self::new_with_wasm_executor` method instead of it")]
 	pub fn allow_missing_host_functions(&mut self, allow_missing_host_functions: bool) {
 		self.wasm.allow_missing_host_functions = allow_missing_host_functions
+	}
+
+	pub fn gear_force_native(&mut self) {
+		self.gear_force_native = true;
 	}
 }
 
@@ -645,7 +654,7 @@ impl<D: NativeExecutionDispatch + 'static> CodeExecutor for NativeElseWasmExecut
 		runtime_code: &RuntimeCode,
 		method: &str,
 		data: &[u8],
-		use_native: bool,
+		mut use_native: bool,
 		context: CallContext,
 	) -> (Result<Vec<u8>>, bool) {
 		tracing::trace!(
@@ -653,6 +662,10 @@ impl<D: NativeExecutionDispatch + 'static> CodeExecutor for NativeElseWasmExecut
 			function = %method,
 			"Executing function",
 		);
+
+		if self.gear_force_native {
+			use_native = true;
+		}
 
 		let on_chain_heap_alloc_strategy = if self.wasm.ignore_onchain_heap_pages {
 			self.wasm.default_onchain_heap_alloc_strategy
@@ -711,7 +724,11 @@ impl<D: NativeExecutionDispatch + 'static> CodeExecutor for NativeElseWasmExecut
 
 impl<D: NativeExecutionDispatch> Clone for NativeElseWasmExecutor<D> {
 	fn clone(&self) -> Self {
-		NativeElseWasmExecutor { native_version: D::native_version(), wasm: self.wasm.clone() }
+		NativeElseWasmExecutor {
+			native_version: D::native_version(),
+			wasm: self.wasm.clone(),
+			gear_force_native: self.gear_force_native,
+		}
 	}
 }
 

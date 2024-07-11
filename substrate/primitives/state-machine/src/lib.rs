@@ -223,7 +223,7 @@ mod execution {
 
 	impl<'a, B, H, Exec> StateMachine<'a, B, H, Exec>
 	where
-		H: Hasher,
+		H: Hasher + 'static,
 		H::Out: Ord + 'static + codec::Codec,
 		Exec: CodeExecutor + Clone + 'static,
 		B: Backend<H>,
@@ -318,7 +318,7 @@ mod execution {
 	) -> Result<(Vec<u8>, StorageProof), Box<dyn Error>>
 	where
 		B: AsTrieBackend<H>,
-		H: Hasher,
+		H: Hasher + 'static,
 		H::Out: Ord + 'static + codec::Codec,
 		Exec: CodeExecutor + Clone + 'static,
 	{
@@ -354,7 +354,7 @@ mod execution {
 	) -> Result<(Vec<u8>, StorageProof), Box<dyn Error>>
 	where
 		S: trie_backend_essence::TrieBackendStorage<H>,
-		H: Hasher,
+		H: Hasher + 'static,
 		H::Out: Ord + 'static + codec::Codec,
 		Exec: CodeExecutor + 'static + Clone,
 	{
@@ -416,7 +416,7 @@ mod execution {
 		runtime_code: &RuntimeCode,
 	) -> Result<Vec<u8>, Box<dyn Error>>
 	where
-		H: Hasher,
+		H: Hasher + 'static,
 		H::Out: Ord + 'static + codec::Codec,
 		Exec: CodeExecutor + Clone + 'static,
 	{
