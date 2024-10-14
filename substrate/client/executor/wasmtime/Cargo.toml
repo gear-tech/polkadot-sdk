@@ -24,8 +24,8 @@ parking_lot = { workspace = true, default-features = true }
 # When bumping wasmtime do not forget to also bump rustix
 # to exactly the same version as used by wasmtime!
 anyhow = { workspace = true }
-sc-allocator.workspace = true
-sc-allocator.default-features = true
+sp-allocator.workspace = true
+sp-allocator.default-features = true
 sc-executor-common.workspace = true
 sc-executor-common.default-features = true
 sp-runtime-interface.workspace = true
