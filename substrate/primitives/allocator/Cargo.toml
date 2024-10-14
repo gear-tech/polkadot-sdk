@@ -18,14 +18,9 @@ targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
 codec = { features = ["derive"], workspace = true }
-log = { workspace = true, default-features = true }
+log = { workspace = true }
 thiserror = { workspace = true, optional = true }
-# sp-core.workspace = true
-# sp-core.default-features = true
-# sp-wasm-interface.workspace = true
-# sp-wasm-interface.default-features = true
-sp-wasm-interface-common.workspace = true
-sp-wasm-interface-common.default-features = true
+sp-wasm-interface-common = { workspace = true }
 
 [features]
 default = [ "std" ]
