@@ -873,7 +873,7 @@ node = [
 	"polkadot-service",
 	"polkadot-statement-distribution",
 	"polkadot-statement-table",
-	"sc-allocator",
+	"sp-allocator",
 	"sc-authority-discovery",
 	"sc-basic-authorship",
 	"sc-block-builder",
@@ -2412,10 +2412,10 @@ default-features = false
 optional = true
 path = "../polkadot/statement-table"
 
-[dependencies.sc-allocator]
+[dependencies.sp-allocator]
 default-features = false
 optional = true
-path = "../substrate/client/allocator"
+path = "../substrate/primitives/allocator"
 
 [dependencies.sc-authority-discovery]
 default-features = false

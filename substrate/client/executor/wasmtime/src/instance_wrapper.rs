@@ -23,8 +23,10 @@ use std::sync::Arc;
 
 use crate::runtime::{InstanceCounter, ReleaseInstanceHandle, Store, StoreData};
 use sc_executor_common::error::{Backtrace, Error, MessageWithBacktrace, Result, WasmError};
-use sp_wasm_interface::{Pointer, WordSize};
-use wasmtime::{AsContext, AsContextMut, Engine, Instance, InstancePre, Memory};
+use sp_wasm_interface::{Pointer, Value, WordSize};
+use wasmtime::{
+	AsContext, AsContextMut, Engine, Extern, Instance, InstancePre, Memory, Table, Val,
+};
 
 /// Wasm blob entry point.
 pub struct EntryPoint(wasmtime::TypedFunc<(u32, u32), u64>);
@@ -70,41 +72,6 @@ impl EntryPoint {
 			.typed::<(u32, u32), u64>(ctx)
 			.map_err(|_| "Invalid signature for direct entry point")?;
 		Ok(Self(entrypoint))
-	}
-}
-
-/// Wrapper around [`Memory`] that implements [`sc_allocator::Memory`].
-pub(crate) struct MemoryWrapper<'a, C>(pub &'a wasmtime::Memory, pub &'a mut C);
-
-impl<C: AsContextMut> sc_allocator::Memory for MemoryWrapper<'_, C> {
-	fn with_access_mut<R>(&mut self, run: impl FnOnce(&mut [u8]) -> R) -> R {
-		run(self.0.data_mut(&mut self.1))
-	}
-
-	fn with_access<R>(&self, run: impl FnOnce(&[u8]) -> R) -> R {
-		run(self.0.data(&self.1))
-	}
-
-	fn grow(&mut self, additional: u32) -> std::result::Result<(), ()> {
-		self.0
-			.grow(&mut self.1, additional as u64)
-			.map_err(|e| {
-				log::error!(
-					target: "wasm-executor",
-					"Failed to grow memory by {} pages: {}",
-					additional,
-					e,
-				)
-			})
-			.map(drop)
-	}
-
-	fn pages(&self) -> u32 {
-		self.0.size(&self.1) as u32
-	}
-
-	fn max_pages(&self) -> Option<u32> {
-		self.0.ty(&self.1).maximum().map(|p| p as _)
 	}
 }
 
@@ -180,6 +147,24 @@ impl InstanceWrapper {
 			.ok_or_else(|| Error::from("__heap_base is not a i32"))?;
 
 		Ok(heap_base as u32)
+	}
+
+	/// Get the value from a global with the given `name`.
+	pub fn get_global_val(&mut self, name: &str) -> Result<Option<Value>> {
+		let global = match self.instance.get_export(&mut self.store, name) {
+			Some(global) => global,
+			None => return Ok(None),
+		};
+
+		let global = global.into_global().ok_or_else(|| format!("`{}` is not a global", name))?;
+
+		match global.get(&mut self.store) {
+			Val::I32(val) => Ok(Some(Value::I32(val))),
+			Val::I64(val) => Ok(Some(Value::I64(val))),
+			Val::F32(val) => Ok(Some(Value::F32(val))),
+			Val::F64(val) => Ok(Some(Value::F64(val))),
+			_ => Err("Unknown value type".into()),
+		}
 	}
 }
 

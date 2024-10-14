@@ -964,8 +964,8 @@ pub use polkadot_statement_distribution;
 pub use polkadot_statement_table;
 
 /// Collection of allocator implementations.
-#[cfg(feature = "sc-allocator")]
-pub use sc_allocator;
+#[cfg(feature = "sp-allocator")]
+pub use sp_allocator;
 
 /// Substrate authority discovery.
 #[cfg(feature = "sc-authority-discovery")]
