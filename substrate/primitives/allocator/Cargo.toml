@@ -1,5 +1,5 @@
 [package]
-name = "sc-allocator"
+name = "sp-allocator"
 version = "29.0.0"
 authors.workspace = true
 edition.workspace = true
@@ -17,9 +17,11 @@ workspace = true
 targets = ["x86_64-unknown-linux-gnu"]
 
 [dependencies]
-log = { workspace = true, default-features = true }
-thiserror = { workspace = true }
-sp-core.workspace = true
-sp-core.default-features = true
-sp-wasm-interface.workspace = true
-sp-wasm-interface.default-features = true
+codec = { features = ["derive"], workspace = true }
+log = { workspace = true, default-features = false }
+thiserror = { workspace = true, optional = true }
+sp-wasm-interface-common = { workspace = true, default-features = false }
+
+[features]
+default = [ "std" ]
+std = [ "codec/std", "log/std", "sp-wasm-interface-common/std", "thiserror" ]

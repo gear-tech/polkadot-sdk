@@ -20,7 +20,7 @@
 
 use crate::error::Error;
 
-pub use sc_allocator::AllocationStats;
+pub use sp_allocator::AllocationStats;
 
 /// Default heap allocation strategy.
 pub const DEFAULT_HEAP_ALLOC_STRATEGY: HeapAllocStrategy =
@@ -69,6 +69,11 @@ pub trait WasmInstance: Send {
 	fn call_export(&mut self, method: &str, data: &[u8]) -> Result<Vec<u8>, Error> {
 		self.call(method.into(), data)
 	}
+
+	/// Get the value from a global with the given `name`.
+	///
+	/// This method is only suitable for getting immutable globals.
+	fn get_global_const(&mut self, name: &str) -> Result<Option<sp_wasm_interface::Value>, Error>;
 }
 
 /// Defines the heap pages allocation strategy the wasm runtime should use.
