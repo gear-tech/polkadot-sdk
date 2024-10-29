@@ -104,8 +104,10 @@ impl InstanceWrapper {
 		})?;
 
 		let memory = get_linear_memory(&instance, &mut store)?;
+		let table = get_table(&instance, &mut store);
 
 		store.data_mut().memory = Some(memory);
+		store.data_mut().table = table;
 
 		Ok(InstanceWrapper { instance, store, _release_instance_handle })
 	}
@@ -180,6 +182,17 @@ fn get_linear_memory(instance: &Instance, ctx: impl AsContextMut) -> Result<Memo
 
 	Ok(memory)
 }
+
+
+/// Extract the table from the given instance if any.
+fn get_table(instance: &Instance, ctx: &mut Store) -> Option<Table> {
+	instance
+		.get_export(ctx, "__indirect_function_table")
+		.as_ref()
+		.cloned()
+		.and_then(Extern::into_table)
+}
+
 
 /// Functions related to memory.
 impl InstanceWrapper {
