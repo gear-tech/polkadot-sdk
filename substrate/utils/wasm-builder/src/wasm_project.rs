@@ -601,9 +601,10 @@ fn project_enabled_features(
 			// We don't want to enable the `std`/`default` feature for the wasm build and
 			// we need to check if the feature is enabled by checking the env variable.
 			*f != "std" &&
-				*f != "default" && env::var(format!("CARGO_FEATURE_{}", feature_env))
-				.map(|v| v == "1")
-				.unwrap_or_default()
+				*f != "default" &&
+				env::var(format!("CARGO_FEATURE_{}", feature_env))
+					.map(|v| v == "1")
+					.unwrap_or_default()
 		})
 		.map(|d| d.0.clone())
 		.collect::<Vec<_>>();
@@ -836,9 +837,23 @@ fn build_bloaty_blob(
 	let mut rustflags = String::new();
 	match target {
 		RuntimeTarget::Wasm => {
-			rustflags.push_str(
-				"-C target-cpu=mvp -C target-feature=-sign-ext -C link-arg=--export-table ",
-			);
+			// For Rust >= 1.70 and Rust < 1.84 with `wasm32-unknown-unknown` target,
+			// it's required to disable default WASM features:
+			// - `sign-ext` (since Rust 1.70)
+			// - `multivalue` and `reference-types` (since Rust 1.82)
+			//
+			// For Rust >= 1.84, we use `wasm32v1-none` target
+			// (disables all "post-MVP" WASM features except `mutable-globals`):
+			// - https://doc.rust-lang.org/beta/rustc/platform-support/wasm32v1-none.html
+			//
+			// Also see:
+			// https://blog.rust-lang.org/2024/09/24/webassembly-targets-change-in-default-target-features.html#disabling-on-by-default-webassembly-proposals
+
+			if !cargo_cmd.supports_wasm32v1_none_target() {
+				rustflags.push_str("-C target-cpu=mvp ");
+			}
+
+			rustflags.push_str("-C link-arg=--export-table ");
 		},
 		RuntimeTarget::Riscv => {
 			rustflags.push_str("-C target-feature=+lui-addi-fusion -C relocation-model=pie -C link-arg=--emit-relocs -C link-arg=--unique ");
@@ -851,7 +866,7 @@ fn build_bloaty_blob(
 
 	build_cmd
 		.arg("rustc")
-		.arg(format!("--target={}", target.rustc_target()))
+		.arg(format!("--target={}", target.rustc_target(&cargo_cmd)))
 		.arg(format!("--manifest-path={}", manifest_path.display()))
 		.env("RUSTFLAGS", rustflags)
 		// Manually set the `CARGO_TARGET_DIR` to prevent a cargo deadlock (cargo locks a target dir
@@ -884,6 +899,15 @@ fn build_bloaty_blob(
 		build_cmd.arg("--offline");
 	}
 
+	// For Rust >= 1.70 and Rust < 1.84 with `wasm32-unknown-unknown` target,
+	// it's required to disable default WASM features:
+	// - `sign-ext` (since Rust 1.70)
+	// - `multivalue` and `reference-types` (since Rust 1.82)
+	//
+	// For Rust >= 1.84, we use `wasm32v1-none` target
+	// (disables all "post-MVP" WASM features except `mutable-globals`):
+	// - https://doc.rust-lang.org/beta/rustc/platform-support/wasm32v1-none.html
+	//
 	// Our executor currently only supports the WASM MVP feature set, however nowadays
 	// when compiling WASM the Rust compiler has more features enabled by default.
 	//
@@ -894,10 +918,17 @@ fn build_bloaty_blob(
 	//
 	// So here we force the compiler to also compile the standard library crates for us
 	// to make sure that they also only use the MVP features.
-	if crate::build_std_required() {
+	//
+	// So the `-Zbuild-std` and `RUSTC_BOOTSTRAP=1` hacks are only used for Rust < 1.84.
+	//
+	// Also see:
+	// https://blog.rust-lang.org/2024/09/24/webassembly-targets-change-in-default-target-features.html#disabling-on-by-default-webassembly-proposals
+	if crate::build_std_required(&cargo_cmd) {
 		// Unfortunately this is still a nightly-only flag, but FWIW it is pretty widely used
 		// so it's unlikely to break without a replacement.
-		build_cmd.arg("-Z").arg("build-std");
+		// We only build `core` and `alloc` crates since wasm-builder disables `std` featue for
+		// runtime. Thus the runtime is `#![no_std]` crate.
+		build_cmd.arg("-Z").arg("build-std=core,alloc");
 		if !cargo_cmd.supports_nightly_features() {
 			build_cmd.env("RUSTC_BOOTSTRAP", "1");
 		}
@@ -921,7 +952,7 @@ fn build_bloaty_blob(
 	let blob_name = get_blob_name(target, &manifest_path);
 	let target_directory = project
 		.join("target")
-		.join(target.rustc_target())
+		.join(target.rustc_target(&cargo_cmd))
 		.join(blob_build_profile.directory());
 	match target {
 		RuntimeTarget::Riscv => {
