@@ -1187,6 +1187,7 @@ serde = { version = "1.0.209", default-features = false }
 serde-big-array = { version = "0.3.2" }
 serde_derive = { version = "1.0.117" }
 serde_json = { version = "1.0.127", default-features = false }
+serde-json-wasm = { version = "1.0.1", default-features = false }
 serde_yaml = { version = "0.9" }
 serial_test = { version = "2.0.0" }
 sha1 = { version = "0.10.6" }

@@ -29,7 +29,7 @@ use sp_runtime::format_runtime_string;
 /// Build `GenesisConfig` from a JSON blob not using any defaults and store it in the storage. For
 /// more info refer to [`sp_genesis_builder::GenesisBuilder::build_state`].
 pub fn build_state<GC: BuildGenesisConfig>(json: Vec<u8>) -> BuildResult {
-	let gc = serde_json::from_slice::<GC>(&json)
+	let gc = serde_json_wasm::from_slice::<GC>(&json)
 		.map_err(|e| format_runtime_string!("Invalid JSON blob: {}", e))?;
 	<GC as BuildGenesisConfig>::build(&gc);
 	Ok(())
@@ -48,7 +48,7 @@ where
 {
 	name.as_ref().map_or(
 		Some(
-			serde_json::to_string(&GC::default())
+			serde_json_wasm::to_string(&GC::default())
 				.expect("serialization to json is expected to work. qed.")
 				.into_bytes(),
 		),

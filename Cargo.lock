@@ -5970,7 +5970,7 @@ dependencies = [
  "pretty_assertions",
  "scale-info",
  "serde",
- "serde_json",
+ "serde-json-wasm",
  "smallvec",
  "sp-api",
  "sp-arithmetic",
@@ -19047,6 +19047,15 @@ name = "serde-big-array"
 version = "0.3.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cd31f59f6fe2b0c055371bb2f16d7f0aa7d8881676c04a55b1596d1a17cd10a4"
+dependencies = [
+ "serde",
+]
+
+[[package]]
+name = "serde-json-wasm"
+version = "1.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f05da0d153dd4595bdffd5099dc0e9ce425b205ee648eb93437ff7302af8c9a5"
 dependencies = [
  "serde",
 ]

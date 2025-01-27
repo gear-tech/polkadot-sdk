@@ -54,7 +54,7 @@ sp-crypto-hashing-proc-macro.default-features = true
 k256 = { features = ["ecdsa"], workspace = true }
 environmental = { workspace = true }
 sp-genesis-builder.workspace = true
-serde_json = { features = ["alloc"], workspace = true }
+serde-json-wasm.workspace = true
 docify = { workspace = true }
 static_assertions = { workspace = true, default-features = true }
 
@@ -78,7 +78,7 @@ std = [
 	"log/std",
 	"scale-info/std",
 	"serde/std",
-	"serde_json/std",
+	"serde-json-wasm/std",
 	"sp-api/std",
 	"sp-arithmetic/std",
 	"sp-core/std",
