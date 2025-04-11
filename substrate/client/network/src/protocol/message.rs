@@ -79,12 +79,16 @@ pub mod generic {
 	#[derive(Debug, PartialEq, Eq, Clone, Encode, Decode)]
 	pub enum Message<Header, Hash, Number, Extrinsic> {
 		/// Status packet.
+		#[codec(index = 0)]
 		Status(Status<Hash, Number>),
 		/// Block request.
+		#[codec(index = 1)]
 		BlockRequest(BlockRequest<Hash, Number>),
 		/// Block response.
+		#[codec(index = 2)]
 		BlockResponse(BlockResponse<Header, Hash, Extrinsic>),
 		/// Block announce.
+		#[codec(index = 3)]
 		BlockAnnounce(BlockAnnounce<Header>),
 		/// Consensus protocol message.
 		// NOTE: index is incremented by 1 due to transaction-related
@@ -92,22 +96,31 @@ pub mod generic {
 		#[codec(index = 6)]
 		Consensus(ConsensusMessage),
 		/// Remote method call request.
+		#[codec(index = 7)]
 		RemoteCallRequest(RemoteCallRequest<Hash>),
 		/// Remote method call response.
+		#[codec(index = 8)]
 		RemoteCallResponse(RemoteCallResponse),
 		/// Remote storage read request.
+		#[codec(index = 9)]
 		RemoteReadRequest(RemoteReadRequest<Hash>),
 		/// Remote storage read response.
+		#[codec(index = 10)]
 		RemoteReadResponse(RemoteReadResponse),
 		/// Remote header request.
+		#[codec(index = 11)]
 		RemoteHeaderRequest(RemoteHeaderRequest<Number>),
 		/// Remote header response.
+		#[codec(index = 12)]
 		RemoteHeaderResponse(RemoteHeaderResponse<Header>),
 		/// Remote changes request.
+		#[codec(index = 13)]
 		RemoteChangesRequest(RemoteChangesRequest<Hash>),
 		/// Remote changes response.
+		#[codec(index = 14)]
 		RemoteChangesResponse(RemoteChangesResponse<Number, Hash>),
 		/// Remote child storage read request.
+		#[codec(index = 15)]
 		RemoteReadChildRequest(RemoteReadChildRequest<Hash>),
 		/// Batch of consensus protocol messages.
 		// NOTE: index is incremented by 2 due to finality proof related
