@@ -19,8 +19,8 @@ targets = ["x86_64-unknown-linux-gnu"]
 [dependencies]
 thiserror = { workspace = true }
 wasm-instrument = { workspace = true, default-features = true }
-sc-allocator.workspace = true
-sc-allocator.default-features = true
+sp-allocator.workspace = true
+sp-allocator.default-features = true
 sp-maybe-compressed-blob.workspace = true
 sp-maybe-compressed-blob.default-features = true
 sp-wasm-interface.workspace = true

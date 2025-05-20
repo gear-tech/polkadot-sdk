@@ -116,6 +116,10 @@ impl WasmInstance for Instance {
 
 		(Ok(output), None)
 	}
+
+	fn get_global_const(&mut self, _name: &str) -> Result<Option<sp_wasm_interface::Value>, Error> {
+		unimplemented!()
+	}
 }
 
 struct Context<'r, 'a>(&'r mut polkavm::Caller<'a, ()>);
@@ -152,6 +156,10 @@ impl<'r, 'a> FunctionContext for Context<'r, 'a> {
 
 	fn register_panic_error_message(&mut self, _message: &str) {
 		unimplemented!("'register_panic_error_message' is never used when running under PolkaVM");
+	}
+	fn with_caller_mut_impl(&mut self, _: sp_wasm_interface::FunctionContextToken, _context: *mut (), _callback: fn(*mut (), &mut sp_wasm_interface::Caller<sp_wasm_interface::StoreData>)) {
+
+		unimplemented!("unsupported under PolkaVM");
 	}
 }
 
