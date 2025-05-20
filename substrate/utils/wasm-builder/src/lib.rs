@@ -63,6 +63,9 @@
 //!
 //! By using environment variables, you can configure which Wasm binaries are built and how:
 //!
+//! - `SUBSTRATE_RUNTIME_TARGET` - Sets the target for building runtime. Supported values are `wasm`
+//!   or `riscv` (experimental, do not use it in production!). By default the target is equal to
+//!   `wasm`.
 //! - `SKIP_WASM_BUILD` - Skips building any Wasm binary. This is useful when only native should be
 //!   recompiled. If this is the first run and there doesn't exist a Wasm binary, this will set both
 //!   variables to `None`.
@@ -78,17 +81,15 @@
 //! - `WASM_TARGET_DIRECTORY` - Will copy any build Wasm binary to the given directory. The path
 //!   needs to be absolute.
 //! - `WASM_BUILD_TOOLCHAIN` - The toolchain that should be used to build the Wasm binaries. The
-//!   format needs to be the same as used by cargo, e.g. `nightly-2020-02-20`.
+//!   format needs to be the same as used by cargo, e.g. `nightly-2024-12-26`.
 //! - `WASM_BUILD_WORKSPACE_HINT` - Hint the workspace that is being built. This is normally not
 //!   required as we walk up from the target directory until we find a `Cargo.toml`. If the target
 //!   directory is changed for the build, this environment variable can be used to point to the
 //!   actual workspace.
-//! - `WASM_BUILD_STD` - Sets whether the Rust's standard library crates will also be built. This is
-//!   necessary to make sure the standard library crates only use the exact WASM feature set that
-//!   our executor supports. Enabled by default.
-//! - `WASM_BUILD_CARGO_ARGS` - This can take a string as space separated list of `cargo` arguments.
-//!   It was added specifically for the use case of enabling JSON diagnostic messages during the
-//!   build phase, to be used by IDEs that parse them, but it might be useful for other cases too.
+//! - `WASM_BUILD_STD` - Sets whether the Rust's standard library crates (`core` and `alloc`) will
+//!   also be built. This is necessary to make sure the standard library crates only use the exact
+//!   WASM feature set that our executor supports. Enabled by default for RISC-V target and WASM
+//!   target (but only if Rust < 1.84). Disabled by default for WASM target and Rust >= 1.84.
 //! - `CARGO_NET_OFFLINE` - If `true`, `--offline` will be passed to all processes launched to
 //!   prevent network access. Useful in offline environments.
 //!
@@ -99,17 +100,19 @@
 //! ## Prerequisites:
 //!
 //! Wasm builder requires the following prerequisites for building the Wasm binary:
+//! - Rust >= 1.68 and Rust < 1.84:
+//!   - `wasm32-unknown-unknown` target
+//!   - `rust-src` component
+//! - Rust >= 1.84:
+//!   - `wasm32v1-none` target
 //!
-//! - rust nightly + `wasm32-unknown-unknown` toolchain
-//!
-//! or
-//!
-//! - rust stable and version at least 1.68.0 + `wasm32-unknown-unknown` toolchain
-//!
-//! If a specific rust is installed with `rustup`, it is important that the wasm target is
-//! installed as well. For example if installing the rust from 20.02.2020 using `rustup
-//! install nightly-2020-02-20`, the wasm target needs to be installed as well `rustup target add
-//! wasm32-unknown-unknown --toolchain nightly-2020-02-20`.
+//! If a specific Rust is installed with `rustup`, it is important that the WASM
+//! target is installed as well. For example if installing the Rust from
+//! 26.12.2024 using `rustup install nightly-2024-12-26`, the WASM target
+//! (`wasm32-unknown-unknown` or `wasm32v1-none`) needs to be installed as well
+//! `rustup target add wasm32-unknown-unknown --toolchain nightly-2024-12-26`.
+//! To install the `rust-src` component, use `rustup component add rust-src
+//! --toolchain nightly-2024-12-26`.
 
 use std::{
 	collections::BTreeSet,
@@ -163,7 +166,7 @@ const FORCE_WASM_BUILD_ENV: &str = "FORCE_WASM_BUILD";
 /// Environment variable that hints the workspace we are building.
 const WASM_BUILD_WORKSPACE_HINT: &str = "WASM_BUILD_WORKSPACE_HINT";
 
-/// Environment variable to set whether we'll build `core`/`std`.
+/// Environment variable to set whether we'll build `core`/`alloc`.
 const WASM_BUILD_STD: &str = "WASM_BUILD_STD";
 
 /// Environment variable to set additional cargo arguments that might be useful
@@ -358,6 +361,14 @@ impl CargoCommand {
 		// Check if major and minor are greater or equal than 1.68 or this is a nightly.
 		version.major > 1 || (version.major == 1 && version.minor >= 68) || version.is_nightly
 	}
+
+	/// Returns whether this version of the toolchain supports the `wasm32v1-none` target.
+	fn supports_wasm32v1_none_target(&self) -> bool {
+		self.version.map_or(false, |version| {
+			// Check if major and minor are greater or equal than 1.84.
+			version.major > 1 || (version.major == 1 && version.minor >= 84)
+		})
+	}
 }
 
 /// Wraps a [`CargoCommand`] and the version of `rustc` the cargo command uses.
@@ -410,10 +421,13 @@ fn get_bool_environment_variable(name: &str) -> Option<bool> {
 }
 
 /// Returns whether we need to also compile the standard library when compiling the runtime.
-fn build_std_required() -> bool {
-	let default = runtime_target() == RuntimeTarget::Wasm;
-
-	crate::get_bool_environment_variable(crate::WASM_BUILD_STD).unwrap_or(default)
+fn build_std_required(cargo_command: &CargoCommand) -> bool {
+	crate::get_bool_environment_variable(crate::WASM_BUILD_STD).unwrap_or_else(|| {
+		match runtime_target() {
+			RuntimeTarget::Wasm => !cargo_command.supports_wasm32v1_none_target(),
+			RuntimeTarget::Riscv => true,
+		}
+	})
 }
 
 #[derive(Copy, Clone, PartialEq, Eq)]
@@ -423,9 +437,14 @@ enum RuntimeTarget {
 }
 
 impl RuntimeTarget {
-	fn rustc_target(self) -> &'static str {
+	fn rustc_target(self, cargo_command: &CargoCommand) -> &'static str {
 		match self {
-			RuntimeTarget::Wasm => "wasm32-unknown-unknown",
+			RuntimeTarget::Wasm =>
+				if cargo_command.supports_wasm32v1_none_target() {
+					"wasm32v1-none"
+				} else {
+					"wasm32-unknown-unknown"
+				},
 			RuntimeTarget::Riscv => "riscv32ema-unknown-none-elf",
 		}
 	}
