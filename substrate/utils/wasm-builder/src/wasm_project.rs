@@ -96,7 +96,11 @@ fn crate_metadata(cargo_manifest: &Path) -> Metadata {
 	let crate_metadata_command = create_metadata_command(cargo_manifest);
 
 	let crate_metadata = crate_metadata_command
-		.exec()
+		.exec_with_hook(|command| {
+			// As we are being called inside a build-script, this env variable is set.
+			// However, this can lead to cross-compilation errors.
+			command.env_remove("CARGO_ENCODED_RUSTFLAGS");
+		})
 		.expect("`cargo metadata` can not fail on project `Cargo.toml`; qed");
 	// If the `Cargo.lock` didn't exist, we need to remove it after
 	// calling `cargo metadata`. This is required to ensure that we don't change
