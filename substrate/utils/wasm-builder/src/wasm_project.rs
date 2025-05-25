@@ -1113,7 +1113,11 @@ fn generate_rerun_if_changed_instructions(
 	}
 
 	let metadata = create_metadata_command(project_folder.join("Cargo.toml"))
-		.exec()
+		.exec_with_hook(|command| {
+			// As we are being called inside a build-script, this env variable is set.
+			// However, this can lead to cross-compilation errors.
+			command.env_remove("CARGO_ENCODED_RUSTFLAGS");
+		})
 		.expect("`cargo metadata` can not fail!");
 
 	let package = metadata
