@@ -548,7 +548,7 @@ fn find_package_by_manifest_path<'a>(
 	let pkgs_by_name = crate_metadata
 		.packages
 		.iter()
-		.filter(|p| *p.name == pkg_name)
+		.filter(|p| p.name == pkg_name)
 		.collect::<Vec<_>>();
 
 	if let Some(pkg) = pkgs_by_name.first() {
@@ -1151,7 +1151,7 @@ fn generate_rerun_if_changed_instructions(
 				// Check that the name matches and that the version matches or this is
 				// a git or path dep. A git or path dependency can only occur once, so we don't
 				// need to check the version.
-				(path_or_git_dep || dependency.req.matches(&p.version)) && dependency.name == *p.name
+				(path_or_git_dep || dependency.req.matches(&p.version)) && dependency.name == p.name
 			});
 
 		if let Some(package) = package {
