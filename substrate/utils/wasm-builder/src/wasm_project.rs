@@ -96,11 +96,7 @@ fn crate_metadata(cargo_manifest: &Path) -> Metadata {
 	let crate_metadata_command = create_metadata_command(cargo_manifest);
 
 	let crate_metadata = crate_metadata_command
-		.exec_with_hook(|command| {
-			// As we are being called inside a build-script, this env variable is set.
-			// However, this can lead to cross-compilation errors.
-			command.env_remove("CARGO_ENCODED_RUSTFLAGS");
-		})
+		.exec()
 		.expect("`cargo metadata` can not fail on project `Cargo.toml`; qed");
 	// If the `Cargo.lock` didn't exist, we need to remove it after
 	// calling `cargo metadata`. This is required to ensure that we don't change
@@ -1099,6 +1095,11 @@ fn create_metadata_command(path: impl Into<PathBuf>) -> MetadataCommand {
 	if offline_build() {
 		metadata_command.other_options(vec!["--offline".to_owned()]);
 	}
+
+	// As we are being called inside a build-script, this env variable is set.
+	// However, this can lead to cross-compilation errors.
+	metadata_command.env_remove("CARGO_ENCODED_RUSTFLAGS");
+
 	metadata_command
 }
 
@@ -1117,11 +1118,7 @@ fn generate_rerun_if_changed_instructions(
 	}
 
 	let metadata = create_metadata_command(project_folder.join("Cargo.toml"))
-		.exec_with_hook(|command| {
-			// As we are being called inside a build-script, this env variable is set.
-			// However, this can lead to cross-compilation errors.
-			command.env_remove("CARGO_ENCODED_RUSTFLAGS");
-		})
+		.exec()
 		.expect("`cargo metadata` can not fail!");
 
 	let package = metadata
