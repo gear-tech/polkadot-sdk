@@ -548,7 +548,7 @@ fn find_package_by_manifest_path<'a>(
 	let pkgs_by_name = crate_metadata
 		.packages
 		.iter()
-		.filter(|p| p.name == pkg_name)
+		.filter(|p| *p.name == pkg_name)
 		.collect::<Vec<_>>();
 
 	if let Some(pkg) = pkgs_by_name.first() {
@@ -1095,6 +1095,11 @@ fn create_metadata_command(path: impl Into<PathBuf>) -> MetadataCommand {
 	if offline_build() {
 		metadata_command.other_options(vec!["--offline".to_owned()]);
 	}
+
+	// As we are being called inside a build-script, this env variable is set.
+	// However, this can lead to cross-compilation errors.
+	metadata_command.env_remove("CARGO_ENCODED_RUSTFLAGS");
+
 	metadata_command
 }
 
@@ -1136,7 +1141,7 @@ fn generate_rerun_if_changed_instructions(
 		}
 
 		let path_or_git_dep =
-			dependency.source.as_ref().map(|s| s.starts_with("git+")).unwrap_or(true);
+			dependency.source.as_ref().map(|s| s.repr.starts_with("git+")).unwrap_or(true);
 
 		let package = metadata
 			.packages
@@ -1146,7 +1151,7 @@ fn generate_rerun_if_changed_instructions(
 				// Check that the name matches and that the version matches or this is
 				// a git or path dep. A git or path dependency can only occur once, so we don't
 				// need to check the version.
-				(path_or_git_dep || dependency.req.matches(&p.version)) && dependency.name == p.name
+				(path_or_git_dep || dependency.req.matches(&p.version)) && dependency.name == *p.name
 			});
 
 		if let Some(package) = package {
