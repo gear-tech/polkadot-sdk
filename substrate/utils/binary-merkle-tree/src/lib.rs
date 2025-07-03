@@ -55,6 +55,23 @@ where
 	merkelize::<H, _, _>(iter, &mut ()).into()
 }
 
+/// Construct a root hash of a Binary Merkle Tree created from given leaves.
+///
+/// This is a raw version of the [`merkle_root`] function that does not require leaves to be
+/// hashed first.
+///
+/// See crate-level docs for details about Merkle Tree construction.
+///
+/// In case an empty list of leaves is passed the function returns a 0-filled hash.
+pub fn merkle_root_raw<H, I>(leaves: I) -> H::Out
+where
+	H: Hasher,
+	H::Out: Default + AsRef<[u8]>,
+	I: IntoIterator<Item = H::Out>,
+{
+	merkelize::<H, _, _>(leaves.into_iter(), &mut ()).into()
+}
+
 fn merkelize<H, V, I>(leaves: I, visitor: &mut V) -> H::Out
 where
 	H: Hasher,
@@ -130,6 +147,39 @@ impl<T> Visitor<T> for () {
 	fn visit(&mut self, _index: usize, _left: &Option<T>, _right: &Option<T>) {}
 }
 
+/// The struct collects a proof for single leaf.
+struct ProofCollection<T> {
+	proof: Vec<T>,
+	position: usize,
+}
+
+impl<T> ProofCollection<T> {
+	fn new(position: usize) -> Self {
+		ProofCollection { proof: Default::default(), position }
+	}
+}
+
+impl<T: Copy> Visitor<T> for ProofCollection<T> {
+	fn move_up(&mut self) {
+		self.position /= 2;
+	}
+
+	fn visit(&mut self, index: usize, left: &Option<T>, right: &Option<T>) {
+		// we are at left branch - right goes to the proof.
+		if self.position == index {
+			if let Some(right) = right {
+				self.proof.push(*right);
+			}
+		}
+		// we are at right branch - left goes to the proof.
+		if self.position == index + 1 {
+			if let Some(left) = left {
+				self.proof.push(*left);
+			}
+		}
+	}
+}
+
 /// Construct a Merkle Proof for leaves given by indices.
 ///
 /// The function constructs a (partial) Merkle Tree first and stores all elements required
@@ -157,38 +207,53 @@ where
 		hash
 	});
 
-	/// The struct collects a proof for single leaf.
-	struct ProofCollection<T> {
-		proof: Vec<T>,
-		position: usize,
-	}
+	let number_of_leaves = iter.len();
+	let mut collect_proof = ProofCollection::new(leaf_index);
 
-	impl<T> ProofCollection<T> {
-		fn new(position: usize) -> Self {
-			ProofCollection { proof: Default::default(), position }
-		}
-	}
+	let root = merkelize::<H, _, _>(iter, &mut collect_proof);
+	let leaf = leaf.expect("Requested `leaf_index` is greater than number of leaves.");
 
-	impl<T: Copy> Visitor<T> for ProofCollection<T> {
-		fn move_up(&mut self) {
-			self.position /= 2;
-		}
+	#[cfg(feature = "debug")]
+	log::debug!(
+		"[merkle_proof] Proof: {:?}",
+		collect_proof
+			.proof
+			.iter()
+			.map(|s| array_bytes::bytes2hex("", s))
+			.collect::<Vec<_>>()
+	);
 
-		fn visit(&mut self, index: usize, left: &Option<T>, right: &Option<T>) {
-			// we are at left branch - right goes to the proof.
-			if self.position == index {
-				if let Some(right) = right {
-					self.proof.push(*right);
-				}
-			}
-			// we are at right branch - left goes to the proof.
-			if self.position == index + 1 {
-				if let Some(left) = left {
-					self.proof.push(*left);
-				}
-			}
+	MerkleProof { root, proof: collect_proof.proof, number_of_leaves, leaf_index, leaf }
+}
+
+/// Construct a Merkle Proof for leaves given by indices.
+///
+/// This is a raw version of the [`merkle_proof`] function that does not require leaves to be
+/// hashed first.
+///
+/// The function constructs a (partial) Merkle Tree first and stores all elements required
+/// to prove requested item (leaf) given the root hash.
+///
+/// Both the Proof and the Root Hash is returned.
+///
+/// # Panic
+///
+/// The function will panic if given `leaf_index` is greater than the number of leaves.
+pub fn merkle_proof_raw<H, I>(leaves: I, leaf_index: usize) -> MerkleProof<H::Out, H::Out>
+where
+	H: Hasher,
+	H::Out: Default + Copy + AsRef<[u8]>,
+	I: IntoIterator<Item = H::Out>,
+	I::IntoIter: ExactSizeIterator,
+{
+	let mut leaf = None;
+	let iter = leaves.into_iter().enumerate().map(|(idx, l)| {
+		let hash = l;
+		if idx == leaf_index {
+			leaf = Some(l);
 		}
-	}
+		hash
+	});
 
 	let number_of_leaves = iter.len();
 	let mut collect_proof = ProofCollection::new(leaf_index);
