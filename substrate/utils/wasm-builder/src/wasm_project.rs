@@ -667,13 +667,13 @@ fn create_project(
 		RuntimeTarget::Wasm => {
 			write_file_if_changed(
 				wasm_project_folder.join("src/lib.rs"),
-				"#![no_std] pub use wasm_project::*;",
+				"#![no_std] #![allow(unused_imports)] pub use wasm_project::*;",
 			);
 		},
 		RuntimeTarget::Riscv => {
 			write_file_if_changed(
 				wasm_project_folder.join("src/main.rs"),
-				"#![no_std] #![no_main] pub use wasm_project::*;",
+				"#![no_std] #![no_main] #![allow(unused_imports)] pub use wasm_project::*;",
 			);
 		},
 	}
