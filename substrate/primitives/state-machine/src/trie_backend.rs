@@ -1489,7 +1489,7 @@ pub mod tests {
 		for (key, value) in new_data {
 			assert_eq!(
 				value.unwrap(),
-				cache.lookup_value_for_key(key).unwrap().data().flatten().unwrap().as_ref()
+				&*cache.lookup_value_for_key(key).unwrap().data().flatten().unwrap()
 			);
 		}
 	}
