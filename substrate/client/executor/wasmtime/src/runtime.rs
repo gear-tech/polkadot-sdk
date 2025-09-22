@@ -221,6 +221,7 @@ fn common_config(semantics: &Semantics) -> std::result::Result<wasmtime::Config,
 	let mut config = wasmtime::Config::new();
 	config.cranelift_opt_level(wasmtime::OptLevel::SpeedAndSize);
 	config.cranelift_nan_canonicalization(semantics.canonicalize_nans);
+	config.macos_use_mach_ports(false);
 
 	// Since wasmtime 6.0.0 the default for this is `true`, but that heavily regresses
 	// the contracts pallet's performance, so disable it for now.
