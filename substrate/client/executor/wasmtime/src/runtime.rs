@@ -202,7 +202,6 @@ fn setup_wasmtime_caching(
 	let config_content = format!(
 		"\
 [cache]
-enabled = true
 directory = \"{cache_dir}\"
 ",
 		cache_dir = wasmtime_cache_root.display()
