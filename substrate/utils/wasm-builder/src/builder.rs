@@ -53,6 +53,7 @@ impl WasmBuilderSelectProject {
 	/// is always set by `Cargo` in `build.rs` files.
 	pub fn with_current_project(self) -> WasmBuilder {
 		WasmBuilder {
+			cargo_flags: Vec::new(),
 			rust_flags: Vec::new(),
 			file_name: None,
 			project_cargo_toml: get_manifest_dir().join("Cargo.toml"),
@@ -73,6 +74,7 @@ impl WasmBuilderSelectProject {
 
 		if path.ends_with("Cargo.toml") && path.exists() {
 			Ok(WasmBuilder {
+				cargo_flags: Vec::new(),
 				rust_flags: Vec::new(),
 				file_name: None,
 				project_cargo_toml: path,
@@ -101,6 +103,8 @@ impl WasmBuilderSelectProject {
 ///    methods of [`WasmBuilder`].
 /// 4. Build the WASM binary using [`Self::build`].
 pub struct WasmBuilder {
+	/// Flags that should be appended to `cargo rustc` invocation.
+	cargo_flags: Vec<String>,
 	/// Flags that should be appended to `RUST_FLAGS` env variable.
 	rust_flags: Vec<String>,
 	/// The name of the file that is being generated in `OUT_DIR`.
@@ -190,6 +194,14 @@ impl WasmBuilder {
 		self
 	}
 
+	/// Append the given `flag` to `cargo rustc` invocation.
+	///
+	/// `flag` is appended as is, so it needs to be a valid flag.
+	pub fn append_to_cargo_flags(mut self, flag: impl Into<String>) -> Self {
+		self.cargo_flags.push(flag.into());
+		self
+	}
+
 	/// Append the given `flag` to `RUST_FLAGS`.
 	///
 	/// `flag` is appended as is, so it needs to be a valid flag.
@@ -264,6 +276,7 @@ impl WasmBuilder {
 			target,
 			file_path,
 			self.project_cargo_toml,
+			self.cargo_flags.join(" "),
 			self.rust_flags.join(" "),
 			self.features_to_enable,
 			self.file_name,
@@ -340,6 +353,7 @@ fn build_project(
 	target: RuntimeTarget,
 	file_name: PathBuf,
 	project_cargo_toml: PathBuf,
+	default_cargo_flags: String,
 	default_rustflags: String,
 	features_to_enable: Vec<String>,
 	wasm_binary_name: Option<String>,
@@ -359,6 +373,7 @@ fn build_project(
 	let (wasm_binary, bloaty) = crate::wasm_project::create_and_compile(
 		target,
 		&project_cargo_toml,
+		&default_cargo_flags,
 		&default_rustflags,
 		cargo_cmd,
 		features_to_enable,
