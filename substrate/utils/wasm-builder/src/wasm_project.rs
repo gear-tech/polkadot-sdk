@@ -117,6 +117,7 @@ fn crate_metadata(cargo_manifest: &Path) -> Metadata {
 pub(crate) fn create_and_compile(
 	target: RuntimeTarget,
 	orig_project_cargo_toml: &Path,
+	default_cargo_flags: &[String],
 	default_rustflags: &str,
 	cargo_cmd: CargoCommandVersioned,
 	features_to_enable: Vec<String>,
@@ -149,6 +150,7 @@ pub(crate) fn create_and_compile(
 				target,
 				&build_config.blob_build_profile,
 				&project,
+				default_cargo_flags,
 				default_rustflags,
 				cargo_cmd.clone(),
 				None,
@@ -160,6 +162,7 @@ pub(crate) fn create_and_compile(
 				target,
 				&build_config.blob_build_profile,
 				&project,
+				default_cargo_flags,
 				default_rustflags,
 				cargo_cmd,
 				Some(hash),
@@ -169,6 +172,7 @@ pub(crate) fn create_and_compile(
 			target,
 			&build_config.blob_build_profile,
 			&project,
+			default_cargo_flags,
 			default_rustflags,
 			cargo_cmd,
 			None,
@@ -182,6 +186,7 @@ pub(crate) fn create_and_compile(
 			target,
 			&build_config.blob_build_profile,
 			&project,
+			default_cargo_flags,
 			default_rustflags,
 			cargo_cmd,
 		)
@@ -827,6 +832,7 @@ fn build_bloaty_blob(
 	target: RuntimeTarget,
 	blob_build_profile: &Profile,
 	project: &Path,
+	default_cargo_flags: &[String],
 	default_rustflags: &str,
 	cargo_cmd: CargoCommandVersioned,
 	#[cfg(feature = "metadata-hash")] metadata_hash: Option<[u8; 32]>,
@@ -868,6 +874,7 @@ fn build_bloaty_blob(
 		.arg("rustc")
 		.arg(format!("--target={}", target.rustc_target(&cargo_cmd)))
 		.arg(format!("--manifest-path={}", manifest_path.display()))
+		.args(default_cargo_flags)
 		.env("RUSTFLAGS", rustflags)
 		// Manually set the `CARGO_TARGET_DIR` to prevent a cargo deadlock (cargo locks a target dir
 		// exclusive). The runner project is created in `CARGO_TARGET_DIR` and executing it will
