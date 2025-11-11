@@ -150,6 +150,7 @@ pub(crate) fn create_and_compile(
 				target,
 				&build_config.blob_build_profile,
 				&project,
+				default_cargo_flags,
 				default_rustflags,
 				cargo_cmd.clone(),
 				None,
