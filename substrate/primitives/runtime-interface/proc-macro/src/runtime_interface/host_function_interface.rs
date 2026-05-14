@@ -391,14 +391,14 @@ fn generate_host_function_implementation(
 		registry.register_static(
 			#crate_::sp_wasm_interface::Function::name(&#struct_name),
 			|mut caller: #crate_::sp_wasm_interface::wasmtime::Caller<T::State>, #(#ffi_args_prototype),*|
-				-> std::result::Result<#ffi_return_ty, #crate_::sp_wasm_interface::anyhow::Error>
+				-> std::result::Result<#ffi_return_ty, #crate_::sp_wasm_interface::wasmtime::Error>
 			{
 				T::with_function_context(caller, move |__function_context__| {
 					let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
 						#struct_name::call(
 							__function_context__,
 							#(#ffi_names,)*
-						).map_err(#crate_::sp_wasm_interface::anyhow::Error::msg)
+						).map_err(#crate_::sp_wasm_interface::wasmtime::Error::msg)
 					}));
 					match result {
 						Ok(result) => result,
@@ -408,10 +408,10 @@ fn generate_host_function_implementation(
 									format!("host code panicked while being called by the runtime: {}", message)
 								} else if let Some(message) = panic.downcast_ref::<&'static str>() {
 									format!("host code panicked while being called by the runtime: {}", message)
-								} else {
-									"host code panicked while being called by the runtime".to_owned()
-								};
-							return Err(#crate_::sp_wasm_interface::anyhow::Error::msg(message));
+							} else {
+								"host code panicked while being called by the runtime".to_owned()
+							};
+							return Err(#crate_::sp_wasm_interface::wasmtime::Error::msg(message));
 						}
 					}
 				})
